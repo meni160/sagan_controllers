@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<library path="sagan_controllers">
+  <!-- Define the plugin name with the package and class name -->
+  <class name="sagan_drive_controller/SaganDriveController"
+         type="sagan_drive_controllers::SaganDriveController"
+         base_class_type="controller_interface::ControllerInterface">
+    <!-- Optionally add additional parameters -->
+    <description>
+      Sagan Drive Controller for ROS2-based systems.
+    </description>
+  </class>
+</library>

@@ -16,6 +16,36 @@ find_package(rclcpp_lifecycle REQUIRED)
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
+add_library(sagan_drive_controller SHARED
+  src/sagan_drive_controller.cpp
+)
+
+target_include_directories(sagan_drive_controller
+  PUBLIC
+  include
+)
+
+ament_target_dependencies(sagan_drive_controller PUBLIC
+  controller_interface
+  hardware_interface
+  pluginlib
+  rclcpp
+  rclcpp_lifecycle
+)
+
+# Add install directives
+install(TARGETS sagan_drive_controller
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(DIRECTORY include/
+  DESTINATION include/${PROJECT_NAME}
+)
+
+# Export for pluginlib description file
+pluginlib_export_plugin_description_file(controller_interface sagan_drive_controller.xml)
+
+ament_export_libraries(sagan_drive_controller)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

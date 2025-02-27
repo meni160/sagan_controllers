@@ -6,7 +6,7 @@
 namespace sagan_controllers
 {
 
-controller_interface::CallbackReturn SaganDriveController::on_init()
+controller_interface::CallbackReturn SaganDriverController::on_init()
 {
   try
   {
@@ -21,7 +21,7 @@ controller_interface::CallbackReturn SaganDriveController::on_init()
   }
 }
 
-controller_interface::CallbackReturn SaganDriveController::on_configure(
+controller_interface::CallbackReturn SaganDriverController::on_configure(
   const rclcpp_lifecycle::State &)    
 {
   auto logger = get_node()->get_logger();
@@ -35,7 +35,7 @@ controller_interface::CallbackReturn SaganDriveController::on_configure(
 }
 
 controller_interface::InterfaceConfiguration
-InterfaceConfiguration SaganDriveController::command_interface_configuration() const
+InterfaceConfiguration SaganDriverController::command_interface_configuration() const
 {
   std::vector<std::string> conf_names;
   for (const auto & joint_name : params_.left_wheel_names)
@@ -50,7 +50,7 @@ InterfaceConfiguration SaganDriveController::command_interface_configuration() c
 }
 
 controller_interface::InterfaceConfiguration
-InterfaceConfiguration SaganDriveController::state_interface_configuration() const
+InterfaceConfiguration SaganDriverController::state_interface_configuration() const
 {
   std::vector<std::string> conf_names;
   for (const auto & joint_name : params_.left_wheel_names)
@@ -64,20 +64,20 @@ InterfaceConfiguration SaganDriveController::state_interface_configuration() con
   return {interface_configuration_type::INDIVIDUAL, conf_names};
 }
 
-controller_interface::CallbackReturn SaganDriveController::on_activate(
+controller_interface::CallbackReturn SaganDriverController::on_activate(
   const rclcpp_lifecycle::State &)
 {
   RCLCPP_DEBUG(get_node()->get_logger(), "Subscriber and publisher are now active.");
   return controller_interface::CallbackReturn::SUCCESS;
 }
 
-controller_interface::CallbackReturn SaganDriveController::on_deactivate(
+controller_interface::CallbackReturn SaganDriverController::on_deactivate(
   const rclcpp_lifecycle::State &)
 {
   RCLCPP_DEBUG(get_node()->get_logger(), "Deactivating");
 }
 
-controller_interface::return_type SaganDriveController::update(
+controller_interface::return_type SaganDriverController::update(
   const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   auto logger = this->get_node()->get_logger();
@@ -93,6 +93,6 @@ controller_interface::return_type SaganDriveController::update(
 #include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS(
-  sagan_drive_controller::SaganDriveController, controller_interface::ControllerInterface)
+  sagan_controllers::SaganDriverController, controller_interface::ControllerInterface)
   
 #endif //SAGAN_CONTROLLERS_SAGAN_DRIVE_CONTROLLER_CPP_

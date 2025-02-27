@@ -1,6 +1,8 @@
 #ifndef SAGAN_CONTROLLERS_SAGAN_DRIVE_CONTROLLER_HPP_
 #define SAGAN_CONTROLLERS_SAGAN_DRIVE_CONTROLLER_HPP_
 
+#include <memory>
+
 #include "controller_interface/controller_interface.hpp"
 
 namespace sagan_controllers
@@ -31,13 +33,10 @@ public:
   controller_interface::CallbackReturn on_cleanup(
     const rclcpp_lifecycle::State & previous_state) override;
   
-  controller_interface::CallbackReturn on_error(
-    const rclcpp_lifecycle::State & previous_state) override;
-
 protected:
-  std::vector<hardware_interface::CommandInterface> on_export_reference_interfaces() override;
-
-}
+  std::shared_ptr<ParamListener> param_listener_;
+  Params params_;
+};
 
 } // namespace sagan_controllers
 
