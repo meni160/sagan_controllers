@@ -10,9 +10,10 @@ controller_interface::CallbackReturn SaganDriverController::on_init()
 {
   try
   {
-    // Create the parameter listener and get the parameters
-    param_listener_ = std::make_shared<ParamListener>(get_node());
-    params_ = param_listener_->get_params();
+    auto_declare<std::vector<std::string>>("joints", joint_names_);
+    auto_declare<std::vector<std::string>>("command_interfaces", command_interface_types_);
+    auto_declare<std::vector<std::string>>("state_interfaces", state_interface_types_);
+    auto_declare<std::vector<double>>("joints_references", {});
   }
   catch (const std::exception & e)
   {
@@ -26,12 +27,65 @@ controller_interface::CallbackReturn SaganDriverController::on_configure(
 {
   auto logger = get_node()->get_logger();
 
-  // update parameters if they have changed
-  if (param_listener_->is_old(params_))
+  joint_names_ = get_node()->get_parameter("joints").as_string_array();
+
+  if (command_interface_types_.empty())
   {
-    params_ = param_listener_->get_params();
-    RCLCPP_INFO(logger, "Parameters were updated");
+    command_interface_types_ = get_node()->get_parameter("command_interfaces").as_string_array();
   }
+
+  if (command_interface_types_.empty())
+  {
+    RCLCPP_ERROR(logger, "'command_interfaces' parameter is empty.");
+    return CallbackReturn::FAILURE;
+  }
+
+  for (const auto &interface : command_interface_types_)
+  {
+    auto it =
+      std::find(allowed_command_interface_types_.begin(), allowed_command_interface_types_.end(), interface);
+    if (it == allowed_command_interface_types_.end())
+    {
+      RCLCPP_ERROR(logger, "Command interface type '%s' not allowed! Only effort type is allowed!", interface.c_str());
+      return CallbackReturn::FAILURE;
+    }
+  }
+
+  joint_command_interface_.resize(allowed_command_interface_types_.size());
+
+  // State interface checking
+  state_interface_types_ = get_node()->get_parameter("state_interfaces").as_string_array();
+
+  if (state_interface_types_.empty())
+  {
+  RCLCPP_ERROR(logger, "'state_interfaces' parameter is empty.");
+  return CallbackReturn::FAILURE;
+  }
+
+  joint_state_interface_.resize(allowed_state_interface_types_.size());
+
+  // Pritig format
+  auto get_interface_list = [](const std::vector<std::string> &interface_types)
+  {
+    std::stringstream ss_interfaces;
+    for (size_t index = 0; index < interface_types.size(); ++index)
+    {
+      if (index != 0)
+     {
+      ss_interfaces << " ";
+      }
+      ss_interfaces << interface_types[index];
+    }
+    return ss_interfaces.str();
+  };
+
+  RCLCPP_INFO(
+    logger, "Command interfaces are [%s] and and state interfaces are [%s].",
+    get_interface_list(command_interface_types_).c_str(),
+    get_interface_list(state_interface_types_).c_str());
+
+  return CallbackReturn::SUCCESS;
+
 }
 
 controller_interface::InterfaceConfiguration
