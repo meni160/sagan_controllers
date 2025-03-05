@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(sagan_controllers)
+project(sagan_drive_controller)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -12,9 +12,10 @@ find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
+
+include_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
 
 add_library(sagan_drive_controller SHARED
   src/sagan_drive_controller.cpp
@@ -22,7 +23,12 @@ add_library(sagan_drive_controller SHARED
 
 target_include_directories(sagan_drive_controller
   PUBLIC
-  include
+    include
+    controller_interface
+    hardware_interface
+    pluginlib
+    rclcpp
+    rclcpp_lifecycle
 )
 
 ament_target_dependencies(sagan_drive_controller PUBLIC
@@ -33,6 +39,9 @@ ament_target_dependencies(sagan_drive_controller PUBLIC
   rclcpp_lifecycle
 )
 
+  # Export for pluginlib description file
+pluginlib_export_plugin_description_file(controller_interface sagan_drive_controller.xml)
+
 # Add install directives
 install(TARGETS sagan_drive_controller
   DESTINATION lib/${PROJECT_NAME}
@@ -42,8 +51,16 @@ install(DIRECTORY include/
   DESTINATION include/${PROJECT_NAME}
 )
 
-# Export for pluginlib description file
-pluginlib_export_plugin_description_file(controller_interface sagan_drive_controller.xml)
+ament_export_include_directories(
+    include
+   )
+
+ament_export_dependencies(
+    controller_interface
+    pluginlib
+    rclcpp
+    rclcpp_lifecycle
+   )
 
 ament_export_libraries(sagan_drive_controller)
 

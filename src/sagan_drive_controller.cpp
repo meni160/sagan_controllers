@@ -1,10 +1,28 @@
-#ifndef SAGAN_CONTROLLERS_SAGAN_DRIVE_CONTROLLER_CPP_
-#define SAGAN_CONTROLLERS_SAGAN_DRIVE_CONTROLLER_CPP_
+#ifndef sagan_drive_controller__SAGAN_DRIVE_CONTROLLER_CPP_
+#define sagan_drive_controller__SAGAN_DRIVE_CONTROLLER_CPP_
 
-#include <sagan_controllers/sagan_drive_controller.hpp>
+#include <sagan_drive_controller/sagan_drive_controller.hpp>
+#include <string>
+#include <vector>
 
-namespace sagan_controllers
+#include "lifecycle_msgs/msg/state.hpp"
+#include "rclcpp/logging.hpp"
+#include "rclcpp/parameter.hpp"
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
+#include "rclcpp/time.hpp"
+#include "rclcpp_lifecycle/lifecycle_node.hpp"
+#include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
+#include "rclcpp_lifecycle/state.hpp"
+
+namespace sagan_drive_controller
 {
+
+SaganDriverController::SaganDriverController()
+  : controller_interface::ControllerInterface(),
+    joint_names_({})
+{
+  fprintf(stderr, "Contruction done");
+}
 
 controller_interface::CallbackReturn SaganDriverController::on_init()
 {
@@ -20,6 +38,8 @@ controller_interface::CallbackReturn SaganDriverController::on_init()
     fprintf(stderr, "Exception thrown during init stage with message: %s \n", e.what());
     return controller_interface::CallbackReturn::ERROR;
   }
+
+  return CallbackReturn::SUCCESS;
 }
 
 controller_interface::CallbackReturn SaganDriverController::on_configure(
@@ -89,39 +109,71 @@ controller_interface::CallbackReturn SaganDriverController::on_configure(
 }
 
 controller_interface::InterfaceConfiguration
-InterfaceConfiguration SaganDriverController::command_interface_configuration() const
+SaganDriverController::command_interface_configuration() const
 {
-  std::vector<std::string> conf_names;
-  for (const auto & joint_name : params_.left_wheel_names)
+  controller_interface::InterfaceConfiguration command_interfaces_config;
+  command_interfaces_config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+  command_interfaces_config.names.reserve(joint_names_.size() * command_interface_types_.size());
+  for (const auto &joint : joint_names_)
   {
-    conf_names.push_back(joint_name + "/" + HW_IF_VELOCITY);
+    for (const auto &interface_type : command_interface_types_)
+    {
+      command_interfaces_config.names.push_back(joint + "/" + interface_type);
+    }
   }
-  for (const auto & joint_name : params_.right_wheel_names)
-  {
-    conf_names.push_back(joint_name + "/" + HW_IF_VELOCITY);
-  }
-  return {interface_configuration_type::INDIVIDUAL, conf_names};
+  return command_interfaces_config;
 }
 
 controller_interface::InterfaceConfiguration
-InterfaceConfiguration SaganDriverController::state_interface_configuration() const
+SaganDriverController::state_interface_configuration() const
 {
-  std::vector<std::string> conf_names;
-  for (const auto & joint_name : params_.left_wheel_names)
+  controller_interface::InterfaceConfiguration state_interfaces_config;
+  state_interfaces_config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
+  state_interfaces_config.names.reserve(joint_names_.size() * state_interface_types_.size());
+  for (const auto &joint_name : joint_names_)
   {
-    conf_names.push_back(joint_name + "/" + feedback_type());
+    for (const auto &interface_type : state_interface_types_)
+    {
+      state_interfaces_config.names.push_back(joint_name + "/" + interface_type);
+    }
   }
-  for (const auto & joint_name : params_.right_wheel_names)
-  {
-    conf_names.push_back(joint_name + "/" + feedback_type());
-  }
-  return {interface_configuration_type::INDIVIDUAL, conf_names};
+  return state_interfaces_config;
 }
 
 controller_interface::CallbackReturn SaganDriverController::on_activate(
   const rclcpp_lifecycle::State &)
 {
-  RCLCPP_DEBUG(get_node()->get_logger(), "Subscriber and publisher are now active.");
+  RCLCPP_DEBUG(get_node()->get_logger(), "Activating");
+
+  for (const auto &interface : command_interface_types_)
+  {
+    auto it =
+      std::find(allowed_command_interface_types_.begin(), allowed_command_interface_types_.end(), interface);
+    auto index = std::distance(allowed_command_interface_types_.begin(), it);
+    if (!controller_interface::get_ordered_interfaces(
+          command_interfaces_, joint_names_, interface, joint_command_interface_[index]))
+    {
+      RCLCPP_ERROR(
+        get_node()->get_logger(), "Expected %zu '%s' command interfaces, got %zu.", joint_names_.size(),
+        interface.c_str(), joint_command_interface_[index].size());
+      return CallbackReturn::ERROR;
+    }
+  }
+
+  for (const auto &interface : state_interface_types_)
+  {
+    auto it =
+      std::find(allowed_state_interface_types_.begin(), allowed_state_interface_types_.end(), interface);
+    auto index = std::distance(allowed_state_interface_types_.begin(), it);
+    if (!controller_interface::get_ordered_interfaces(
+          state_interfaces_, joint_names_, interface, joint_state_interface_[index]))
+    {
+      RCLCPP_ERROR(
+        get_node()->get_logger(), "Expected %zu '%s' state interfaces, got %zu.", joint_names_.size(),
+        interface.c_str(), joint_state_interface_[index].size());
+      return CallbackReturn::ERROR;
+    }
+  }
   return controller_interface::CallbackReturn::SUCCESS;
 }
 
@@ -129,24 +181,31 @@ controller_interface::CallbackReturn SaganDriverController::on_deactivate(
   const rclcpp_lifecycle::State &)
 {
   RCLCPP_DEBUG(get_node()->get_logger(), "Deactivating");
+  return controller_interface::CallbackReturn::SUCCESS;
 }
 
 controller_interface::return_type SaganDriverController::update(
   const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-  auto logger = this->get_node()->get_logger();
+  const auto logger = get_node()->get_logger();
   // update dynamic parameters
-  if (param_listener_->is_old(params_))
-  {
-    params_ = param_listener_->get_params();
-  }
+
+    for (auto index = 0; index < 4; index++)
+    {
+      double value = 20.0;
+      (void)joint_command_interface_[0][index].get().set_value(value);
+    }
+
+  
+  return controller_interface::return_type::OK;
 }
 
-} // namespace sagan_controllers
+} // namespace sagan_drive_controller
 
 #include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS(
-  sagan_controllers::SaganDriverController, controller_interface::ControllerInterface)
+  sagan_drive_controller::SaganDriverController, 
+  controller_interface::ControllerInterface)
   
-#endif //SAGAN_CONTROLLERS_SAGAN_DRIVE_CONTROLLER_CPP_
+#endif //sagan_drive_controller_SAGAN_DRIVE_CONTROLLER_CPP_
