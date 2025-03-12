@@ -2,6 +2,7 @@
 #define SAGAN_DRIVE_CONTROLLER__SAGAN_DRIVE_CONTROLLER_HPP_
 
 #include <memory>
+#include <string>
 
 #include "controller_interface/controller_interface.hpp"
 #include "controller_interface/helpers.hpp"
@@ -34,6 +35,17 @@ public:
   
 protected:
   std::vector<std::string> joint_names_;
+
+  std::vector<std::string> fl_wheel_joint;
+  std::vector<std::string> fr_wheel_joint;
+  std::vector<std::string> rl_wheel_joint;
+  std::vector<std::string> rr_wheel_joint;
+
+  std::string fl_steering_joint;
+  std::string fr_steering_joint;
+  std::string rl_steering_joint;
+  std::string rr_steering_joint;
+ 
   std::vector<std::string> command_interface_types_;
   std::vector<std::string> state_interface_types_;
 
