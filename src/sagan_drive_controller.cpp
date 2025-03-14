@@ -66,10 +66,10 @@ controller_interface::CallbackReturn SaganDriverController::on_configure(
   rl_wheel_joint = get_node()->get_parameter("rear_left_wheel_joint").as_string_array();
   rr_wheel_joint = get_node()->get_parameter("rear_right_wheel_joint").as_string_array();
 
-  fl_wheel_joint = get_node()->get_parameter("front_left_steering_joint").as_string_array();
-  fr_wheel_joint = get_node()->get_parameter("front_right_steering_joint").as_string_array();
-  rl_wheel_joint = get_node()->get_parameter("rear_left_steering_joint").as_string_array();
-  rr_wheel_joint = get_node()->get_parameter("rear_right_steering_joint").as_string_array();
+  fl_steering_joint = get_node()->get_parameter("front_left_steering_joint").as_string_array();
+  fr_steering_joint = get_node()->get_parameter("front_right_steering_joint").as_string_array();
+  rl_steering_joint = get_node()->get_parameter("rear_left_steering_joint").as_string_array();
+  rr_steering_joint = get_node()->get_parameter("rear_right_steering_joint").as_string_array();
 
 
   if (command_interface_types_.empty())
@@ -266,7 +266,7 @@ controller_interface::return_type SaganDriverController::update(
     for (auto index = 0; index < 4; index++)
     {
       double value = 20.0;
-      (void)joint_command_interface_[0][index].get().set_value(value);
+      (void)joint_command_interface_[1][index].get().set_value(value);
     }
 
   return controller_interface::return_type::OK;

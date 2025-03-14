@@ -41,10 +41,10 @@ protected:
   std::vector<std::string> rl_wheel_joint;
   std::vector<std::string> rr_wheel_joint;
 
-  std::string fl_steering_joint;
-  std::string fr_steering_joint;
-  std::string rl_steering_joint;
-  std::string rr_steering_joint;
+  std::vector<std::string> fl_steering_joint;
+  std::vector<std::string> fr_steering_joint;
+  std::vector<std::string> rl_steering_joint;
+  std::vector<std::string> rr_steering_joint;
  
   std::vector<std::string> command_interface_types_;
   std::vector<std::string> state_interface_types_;
@@ -56,6 +56,7 @@ protected:
   };
 
   const std::vector<std::string> allowed_command_interface_types_ = {
+    hardware_interface::HW_IF_POSITION,
     hardware_interface::HW_IF_VELOCITY,
   };
 
