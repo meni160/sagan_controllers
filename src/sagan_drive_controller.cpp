@@ -28,11 +28,10 @@ controller_interface::CallbackReturn SaganDriverController::on_init()
 {
   try
   {
-    auto_declare<std::vector<std::string>>("joints", joint_names_);
+    //auto_declare<std::vector<std::string>>("joints", joint_names_);
     auto_declare<std::vector<std::string>>("command_interfaces", command_interface_types_);
     auto_declare<std::vector<std::string>>("state_interfaces", state_interface_types_);
-    auto_declare<std::vector<double>>("joints_references", {});
-
+    //auto_declare<std::vector<double>>("joints_references", {});
 
     auto_declare<std::vector<std::string>>("front_left_wheel_joint", fl_wheel_joint);
     auto_declare<std::vector<std::string>>("front_right_wheel_joint", fr_wheel_joint);
@@ -43,7 +42,6 @@ controller_interface::CallbackReturn SaganDriverController::on_init()
     auto_declare<std::vector<std::string>>("front_right_steering_joint", fr_steering_joint);
     auto_declare<std::vector<std::string>>("rear_left_steering_joint", rl_steering_joint);
     auto_declare<std::vector<std::string>>("rear_right_steering_joint", rr_steering_joint);
-
   }
   catch (const std::exception & e)
   {
@@ -58,8 +56,6 @@ controller_interface::CallbackReturn SaganDriverController::on_configure(
   const rclcpp_lifecycle::State &)    
 {
   auto logger = get_node()->get_logger();
-
-  joint_names_ = get_node()->get_parameter("joints").as_string_array();
 
   fl_wheel_joint = get_node()->get_parameter("front_left_wheel_joint").as_string_array();
   fr_wheel_joint = get_node()->get_parameter("front_right_wheel_joint").as_string_array();
@@ -134,80 +130,54 @@ controller_interface::CallbackReturn SaganDriverController::on_configure(
 controller_interface::InterfaceConfiguration
 SaganDriverController::command_interface_configuration() const
 {
-  // controller_interface::InterfaceConfiguration command_interfaces_config;
-  // command_interfaces_config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
-  // command_interfaces_config.names.reserve(joint_names_.size() * command_interface_types_.size());
-  // for (const auto &joint : joint_names_)
-  // {
-  //   for (const auto &interface_type : command_interface_types_)
-  //   {
-  //     command_interfaces_config.names.push_back(joint + "/" + interface_type);
-  //   }
-  // }
 
   controller_interface::InterfaceConfiguration command_interfaces_config;
   command_interfaces_config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
-  command_interfaces_config.names.reserve(4 * command_interface_types_.size());
+  command_interfaces_config.names.reserve(8 * command_interface_types_.size());
 
-  for (const auto &interface_type : command_interface_types_)
-  {
-    command_interfaces_config.names.push_back(fl_wheel_joint[0] + "/" + interface_type);
+  std::vector<std::string> wheel_joint_names_ = {fl_wheel_joint[0], fr_wheel_joint[0], rl_wheel_joint[0], rr_wheel_joint[0]};
+  std::vector<std::string> steering_joint_names_ = {fl_steering_joint[0], fr_steering_joint[0], rl_steering_joint[0], rr_steering_joint[0]};
+
+  for (std::vector<std::string>::iterator it = wheel_joint_names_.begin(); it != wheel_joint_names_.end(); ++it){
+    for (const auto &interface_type : command_interface_types_)
+    {
+      command_interfaces_config.names.push_back(*it + "/" + interface_type);
+    }
   }
 
-  for (const auto &interface_type : command_interface_types_)
-  {
-    command_interfaces_config.names.push_back(fr_wheel_joint[0] + "/" + interface_type);
-  }
-
-  for (const auto &interface_type : command_interface_types_)
-  {
-    command_interfaces_config.names.push_back(rl_wheel_joint[0] + "/" + interface_type);
-  }
-
-  for (const auto &interface_type : command_interface_types_)
-  {
-    command_interfaces_config.names.push_back(rr_wheel_joint[0] + "/" + interface_type);
+  for (std::vector<std::string>::iterator it = steering_joint_names_.begin(); it != steering_joint_names_.end(); ++it){
+    for (const auto &interface_type : command_interface_types_)
+    {
+      command_interfaces_config.names.push_back(*it + "/" + interface_type);
+    }
   }
 
   return command_interfaces_config;
 }
 
+
 controller_interface::InterfaceConfiguration
 SaganDriverController::state_interface_configuration() const
 {
-  // controller_interface::InterfaceConfiguration state_interfaces_config;
-  // state_interfaces_config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
-  // state_interfaces_config.names.reserve(joint_names_.size() * state_interface_types_.size());
-  // for (const auto &joint_name : joint_names_)
-  // {
-  //   for (const auto &interface_type : state_interface_types_)
-  //   {
-  //     state_interfaces_config.names.push_back(joint_name + "/" + interface_type);
-  //   }
-  // }
-
   controller_interface::InterfaceConfiguration state_interfaces_config;
   state_interfaces_config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
-  state_interfaces_config.names.reserve(4 * state_interface_types_.size());
+  state_interfaces_config.names.reserve(8 * state_interface_types_.size());
 
-  for (const auto &interface_type : state_interface_types_)
-  {
-    state_interfaces_config.names.push_back(fl_wheel_joint[0] + "/" + interface_type);
+  std::vector<std::string> wheel_joint_names_ = {fl_wheel_joint[0], fr_wheel_joint[0], rl_wheel_joint[0], rr_wheel_joint[0]};
+  std::vector<std::string> steering_joint_names_ = {fl_steering_joint[0], fr_steering_joint[0], rl_steering_joint[0], rr_steering_joint[0]};
+
+  for (std::vector<std::string>::iterator it = wheel_joint_names_.begin(); it != wheel_joint_names_.end(); ++it){
+    for (const auto &interface_type : state_interface_types_)
+    {
+      state_interfaces_config.names.push_back(*it + "/" + interface_type);
+    }
   }
 
-  for (const auto &interface_type : state_interface_types_)
-  {
-    state_interfaces_config.names.push_back(fr_wheel_joint[0] + "/" + interface_type);
-  }
-
-  for (const auto &interface_type : state_interface_types_)
-  {
-    state_interfaces_config.names.push_back(rl_wheel_joint[0] + "/" + interface_type);
-  }
-
-  for (const auto &interface_type : state_interface_types_)
-  {
-    state_interfaces_config.names.push_back(rr_wheel_joint[0] + "/" + interface_type);
+  for (std::vector<std::string>::iterator it = steering_joint_names_.begin(); it != steering_joint_names_.end(); ++it){
+    for (const auto &interface_type : state_interface_types_)
+    {
+      state_interfaces_config.names.push_back(*it + "/" + interface_type);
+    }
   }
 
   return state_interfaces_config;
@@ -217,15 +187,20 @@ controller_interface::CallbackReturn SaganDriverController::on_activate(
   const rclcpp_lifecycle::State &)
 {
   RCLCPP_DEBUG(get_node()->get_logger(), "Activating");
+  RCLCPP_INFO(get_node()->get_logger(), "Activating");
 
   std::vector<std::string> wheel_joint_names_ = {fl_wheel_joint[0], fr_wheel_joint[0], rl_wheel_joint[0], rr_wheel_joint[0]};
+  std::vector<std::string> steering_joint_names_ = {fl_steering_joint[0], fr_steering_joint[0], rl_steering_joint[0], rr_steering_joint[0]};
+
+  std::vector<std::string> joint_names_ = wheel_joint_names_;
+  joint_names_.insert(joint_names_.end(),steering_joint_names_.begin(),steering_joint_names_.end());
 
   for (const auto &interface : command_interface_types_)
   {
     auto it =
       std::find(allowed_command_interface_types_.begin(), allowed_command_interface_types_.end(), interface);
     auto index = std::distance(allowed_command_interface_types_.begin(), it);
-    if (!controller_interface::get_ordered_interfaces(command_interfaces_, wheel_joint_names_, interface, joint_command_interface_[index]))
+    if (!controller_interface::get_ordered_interfaces(command_interfaces_, joint_names_, interface, joint_command_interface_[index]))
     {
       RCLCPP_ERROR(
         get_node()->get_logger(), "Expected %zu '%s' command interfaces, got %zu.", joint_names_.size(),
@@ -233,13 +208,13 @@ controller_interface::CallbackReturn SaganDriverController::on_activate(
       return CallbackReturn::ERROR;
     }
   }
-  
+
   for (const auto &interface : state_interface_types_)
   {
     auto it =
       std::find(allowed_state_interface_types_.begin(), allowed_state_interface_types_.end(), interface);
     auto index = std::distance(allowed_state_interface_types_.begin(), it);
-    if (!controller_interface::get_ordered_interfaces(state_interfaces_, wheel_joint_names_, interface, joint_state_interface_[index]))
+    if (!controller_interface::get_ordered_interfaces(state_interfaces_, joint_names_, interface, joint_state_interface_[index]))
     {
       RCLCPP_ERROR(
         get_node()->get_logger(), "Expected %zu '%s' state interfaces, got %zu.", joint_names_.size(),
@@ -265,8 +240,8 @@ controller_interface::return_type SaganDriverController::update(
 
     for (auto index = 0; index < 4; index++)
     {
-      double value = 20.0;
-      (void)joint_command_interface_[1][index].get().set_value(value);
+      (void)joint_command_interface_[0][index].get().set_value(20.0);
+      (void)joint_command_interface_[1][index].get().set_value(20.0);
     }
 
   return controller_interface::return_type::OK;

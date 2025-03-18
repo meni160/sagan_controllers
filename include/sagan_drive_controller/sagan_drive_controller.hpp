@@ -35,6 +35,8 @@ public:
   
 protected:
   std::vector<std::string> joint_names_;
+  std::vector<std::string> wheel_joint_names_;
+  std::vector<std::string> steering_joint_names_;
 
   std::vector<std::string> fl_wheel_joint;
   std::vector<std::string> fr_wheel_joint;
@@ -65,6 +67,7 @@ protected:
 
   InterfaceReferences<hardware_interface::LoanedCommandInterface> joint_command_interface_;
   InterfaceReferences<hardware_interface::LoanedStateInterface> joint_state_interface_;
+  
 
 };
 
