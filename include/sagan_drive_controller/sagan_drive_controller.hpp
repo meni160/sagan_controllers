@@ -32,6 +32,8 @@ public:
   
   controller_interface::CallbackReturn on_deactivate(
     const rclcpp_lifecycle::State & previous_state) override;
+
+  void CommandInterfacesUpdate();
   
 protected:
   std::vector<std::string> joint_names_;
@@ -47,9 +49,16 @@ protected:
   std::vector<std::string> fr_steering_joint;
   std::vector<std::string> rl_steering_joint;
   std::vector<std::string> rr_steering_joint;
- 
+
+
+  std::vector<std::string> wheel_command_interface_types_;
+  std::vector<std::string> steering_command_interface_types_;
   std::vector<std::string> command_interface_types_;
   std::vector<std::string> state_interface_types_;
+  
+  std::vector<double>  wheel_command_interface_;
+  std::vector<double>  steering_command_interface_;
+
 
   const std::vector<std::string> allowed_state_interface_types_ = {
     hardware_interface::HW_IF_POSITION,
