@@ -76,7 +76,9 @@ protected:
 
   InterfaceReferences<hardware_interface::LoanedCommandInterface> joint_command_interface_;
   InterfaceReferences<hardware_interface::LoanedStateInterface> joint_state_interface_;
-  
+
+  std::mutex mutex_actuator;
+  rclcpp::Subscription<lowCmd>::SharedPtr joints_reference_subscriber_;
 
 };
 

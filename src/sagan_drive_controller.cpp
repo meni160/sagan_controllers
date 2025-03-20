@@ -152,6 +152,22 @@ controller_interface::CallbackReturn SaganDriverController::on_configure(
     get_interface_list(command_interface_types_).c_str(),
     get_interface_list(state_interface_types_).c_str());
 
+  
+  joints_reference_subscriber_ = get_node()->create_subscription<SaganCmd>(
+    "~/SaganCommands", rclcpp::SystemDefaultsQoS(),
+    [this](const std::shared_ptr<SaganCmd> msg) -> void
+    {
+        std::lock_guard<std::mutex> lock(this->mutex_actuator);
+        for (int index = 0; index < 12; index++)
+        {
+            qr[index] = msg->motor_cmd[index].q;
+            dqr[index] = msg->motor_cmd[index].dq;
+            kd[index] = msg->motor_cmd[index].kd;
+            kp[index] = msg->motor_cmd[index].kp;
+            tau[index] = msg->motor_cmd[index].tau;
+        }
+    });
+
   return CallbackReturn::SUCCESS;
 
 }
@@ -229,8 +245,8 @@ controller_interface::CallbackReturn SaganDriverController::on_activate(
 
   for (size_t i = 0; i < 4; i++)
   {
-    wheel_command_interface_[i] = 0.0;
-    steering_command_interface_[i] = 0.0;
+    wheel_command_interface_[i] = double(0.0);
+    steering_command_interface_[i] = double(0.0);
   }
   
   
@@ -277,32 +293,34 @@ controller_interface::return_type SaganDriverController::update(
   const auto logger = get_node()->get_logger();
   // update dynamic parameters
 
-    for (auto index = 0; index < 4; index++)
-    {
-      // double value = 20.0;
-      // wheel_command_interface_[index] = value;
-      // steering_command_interface_types_[index] = value;
-      // CommandInterfacesUpdate();
-      command_interfaces_[0].set_value(10.0);
-      command_interfaces_[1].set_value(10.0);
-      command_interfaces_[2].set_value(10.0);
-      command_interfaces_[3].set_value(10.0);
-      command_interfaces_[4].set_value(3.14/2);
-      command_interfaces_[5].set_value(3.14/2);
-      command_interfaces_[6].set_value(3.14/2);
-      command_interfaces_[7].set_value(3.14/2);
-    }
+
+  for (auto index = 0; index < 4; index++)
+  { 
+    wheel_command_interface_[index] = 10.0;
+    steering_command_interface_[index] = 3.14;
+  }
+
+  CommandInterfacesUpdate();
 
   return controller_interface::return_type::OK;
 }
 
-// void SaganDriverController::CommandInterfacesUpdate(){
-//   for (auto index = 0; index < 4; index++)
-//   {
-//     command_interfaces_[index].set_value(wheel_command_interface_[index]);
-//     command_interfaces_[index + 4].set_value(steering_command_interface_types_[index]);
-//   }
-// }
+void SaganDriverController::CommandInterfacesUpdate(){
+
+  auto logger = get_node()->get_logger();
+
+  for (auto index = 0; index < 4; index++)
+  {
+    if (!command_interfaces_[index].set_value(wheel_command_interface_[index])) {
+        RCLCPP_ERROR(logger, "Failed to set value for wheel_command_interface_[%d]", index);
+    }
+
+    if (!command_interfaces_[index + 4].set_value(steering_command_interface_[index])) {
+        RCLCPP_ERROR(logger, "Failed to set value for steering_command_interface_[%d]", index);
+    }
+  }
+  
+}
 
 } // namespace sagan_drive_controller
 
